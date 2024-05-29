@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Highlighting Places on Grid</title>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            grid-template-rows: repeat(6, 50px);
+        }
+        .grid div {
+            border: 1px solid black;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .highlight {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <label for="name">Enter Name:</label>
+    <input type="text" id="name">
+    <button onclick="search()">Search</button>
+
+    <div id="grid" class="grid"></div>
+    <p id="secretary"></p>
+    <p id="secretary-info"></p>
+
+    <script>
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';  // Reset grid content
+            for (let i = 1; i <= 42; i++) {
+                const cell = document.createElement('div');
+                cell.textContent = i;
+                grid.appendChild(cell);
+            }
+        }
+
+        function clearHighlights() {
+            const grid = document.getElementById('grid');
+            Array.from(grid.children).forEach(cell => {
+                cell.classList.remove('highlight');
+            });
+        }
+
+        function highlightCell(x, y) {
+            const index = (y - 1) * 7 + (x - 1);
+            const grid = document.getElementById('grid');
+            grid.children[index].classList.add('highlight');
+        }
+
+        function search() {
+            const name = document.getElementById('name').value;
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('secretary').textContent = `Secretary: ${data.secretary}`;
+                if (data.names.length > 0) {
+                    document.getElementById('secretary-info').textContent = `Names: ${data.names.join(", ")}`;
+                } else {
+                    document.getElementById('secretary-info').textContent = '';
+                }
+                clearHighlights();
+                highlightCell(...data.location);
+            });
+        }
+
+        window.onload = createGrid;
+    </script>
+</body>
+</html>
